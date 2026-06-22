@@ -1,0 +1,23 @@
+{
+  "name": "photo-album-binder",
+  "version": "1.0.0",
+  "description": "Binder-style photo album with local or Neon-backed persistence for Vercel.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "photo-album",
+    "vercel",
+    "neon",
+    "html",
+    "css",
+    "javascript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1"
+  }
+}
