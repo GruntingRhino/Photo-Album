@@ -372,8 +372,7 @@ button {
 
 .primary-btn,
 .secondary-btn,
-.ghost-btn,
-.icon-btn {
+.ghost-btn {
   min-height: 46px;
   border-radius: 999px;
   transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
@@ -403,23 +402,12 @@ button {
   border: 1px solid var(--line);
 }
 
-.icon-btn {
-  width: 46px;
-  background: rgba(255, 252, 247, 0.9);
-  color: var(--ink);
-  border: 1px solid var(--line);
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
 .primary-btn:hover,
 .secondary-btn:hover,
 .ghost-btn:hover,
-.icon-btn:hover,
 .primary-btn:focus-visible,
 .secondary-btn:focus-visible,
-.ghost-btn:focus-visible,
-.icon-btn:focus-visible {
+.ghost-btn:focus-visible {
   transform: translateY(-1px);
   outline: none;
 }

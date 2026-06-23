@@ -9,8 +9,6 @@ const els = {
   memoryDialog: document.getElementById('memoryDialog'),
   albumForm: document.getElementById('albumForm'),
   memoryForm: document.getElementById('memoryForm'),
-  cancelAlbumBtn: document.getElementById('cancelAlbumBtn'),
-  cancelMemoryBtn: document.getElementById('cancelMemoryBtn'),
   backToAlbumsBtn: document.getElementById('backToAlbumsBtn'),
   addMemoryBtn: document.getElementById('addMemoryBtn'),
   albumNameInput: document.getElementById('albumNameInput'),
@@ -229,27 +227,11 @@ function renderMemoryGrid(album) {
     const title = fragment.querySelector('.memory-title');
     const caption = fragment.querySelector('.memory-caption');
     const stamp = fragment.querySelector('.memory-stamp');
-    const deleteButton = fragment.querySelector('.delete-memory-btn');
 
     photo.src = memory.imageData;
     title.textContent = memory.title;
     caption.textContent = memory.caption || 'A small note to remember this day.';
     stamp.textContent = formatDate(memory.createdAt);
-
-    deleteButton.addEventListener('click', async () => {
-      if (appState.mode === 'remote') {
-        await apiFetch(`/api/memories?id=${encodeURIComponent(memory.id)}`, {
-          method: 'DELETE'
-        });
-        await syncAlbums();
-        return;
-      }
-
-      const activeAlbum = getActiveAlbum();
-      activeAlbum.memories = activeAlbum.memories.filter((item) => item.id !== memory.id);
-      saveLocalState();
-      render();
-    });
 
     card.dataset.memoryId = memory.id;
     grid.append(fragment);
@@ -410,8 +392,6 @@ async function compressImage(file) {
 }
 
 els.createAlbumBtn.addEventListener('click', openCreateAlbumDialog);
-els.cancelAlbumBtn.addEventListener('click', () => els.albumDialog.close());
-els.cancelMemoryBtn.addEventListener('click', () => els.memoryDialog.close());
 
 els.albumForm.addEventListener('submit', async (event) => {
   event.preventDefault();

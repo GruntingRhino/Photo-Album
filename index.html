@@ -30,7 +30,7 @@
     <dialog id="albumDialog" class="modal">
       <form method="dialog" id="albumForm" class="modal-card">
         <h2>Create a new album</h2>
-        <p>Give this collection a title and a short note.</p>
+        <p>Name it and keep moving.</p>
         <label>
           Album title
           <input id="albumNameInput" name="albumName" type="text" maxlength="60" placeholder="Spring on the porch" required />
@@ -40,7 +40,6 @@
           <textarea id="albumDescriptionInput" name="albumDescription" rows="3" maxlength="140" placeholder="Pressed flowers, warm tea, and little afternoon moments."></textarea>
         </label>
         <div class="modal-actions">
-          <button class="secondary-btn" type="button" id="cancelAlbumBtn">Cancel</button>
           <button class="primary-btn" type="submit">Save album</button>
         </div>
       </form>
@@ -49,7 +48,7 @@
     <dialog id="memoryDialog" class="modal">
       <form method="dialog" id="memoryForm" class="modal-card">
         <h2>Add a memory card</h2>
-        <p>Upload a photo, add a title, and keep a short note beside it.</p>
+        <p>Add a photo and a short note.</p>
         <label>
           Memory title
           <input id="memoryTitleInput" name="memoryTitle" type="text" maxlength="60" placeholder="Wildflower walk" required />
@@ -63,7 +62,6 @@
           <input id="memoryImageInput" name="memoryImage" type="file" accept="image/*" required />
         </label>
         <div class="modal-actions">
-          <button class="secondary-btn" type="button" id="cancelMemoryBtn">Cancel</button>
           <button class="primary-btn" type="submit">Save memory</button>
         </div>
       </form>
@@ -77,7 +75,6 @@
         <div class="memory-copy">
           <div class="memory-copy-top">
             <h3 class="memory-title"></h3>
-            <button class="icon-btn delete-memory-btn" type="button" aria-label="Delete memory">×</button>
           </div>
           <p class="memory-caption"></p>
           <div class="memory-footer">
