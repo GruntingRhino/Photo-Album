@@ -3,80 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Field Notes Album</title>
+    <title>Albums</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="page-shell">
-      <aside class="binder-rail" aria-hidden="true">
-        <div class="rail-label">Keepsake Binder</div>
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
-      </aside>
+      <nav class="topbar" aria-label="Primary">
+        <div class="topbar-title">
+          <p class="eyebrow">Memory binder</p>
+          <h1 id="navTitle">Albums</h1>
+        </div>
+        <div class="topbar-actions">
+          <span id="navCount" class="count-chip">0 albums</span>
+          <button id="createAlbumBtn" class="primary-btn" type="button">Create new album</button>
+        </div>
+      </nav>
 
-      <main class="album-app">
-        <header class="hero-card">
-          <div>
-            <p class="eyebrow">Bright memories, softly kept</p>
-            <h1>Field Notes Album</h1>
-            <p class="hero-copy">
-              A cream-toned photo album with binder pages, gentle paper textures, and space for every new memory.
-            </p>
-          </div>
-          <div class="hero-actions">
-            <button id="newAlbumBtn" class="primary-btn" type="button">Create new album</button>
-            <button id="seedDemoBtn" class="secondary-btn" type="button">Add sample album</button>
-          </div>
-        </header>
-
-        <section class="workspace-grid">
-          <nav class="album-sidebar paper-panel" aria-label="Albums">
-            <div class="sidebar-header">
-              <div>
-                <p class="section-kicker">Albums</p>
-                <h2>Your shelves</h2>
-              </div>
-              <span id="albumCount" class="count-chip">0 albums</span>
-            </div>
-            <div id="albumTabs" class="album-tabs"></div>
-          </nav>
-
-          <section class="album-stage paper-panel">
-            <div class="album-stage-header">
-              <div>
-                <p class="section-kicker">Current album</p>
-                <h2 id="albumTitle">Create your first album</h2>
-                <p id="albumDescription" class="album-description">
-                  Start with a new album, then attach photos to memory cards on the page.
-                </p>
-              </div>
-              <div class="album-stage-actions">
-                <button id="renameAlbumBtn" class="ghost-btn" type="button">Rename album</button>
-                <button id="addMemoryBtn" class="primary-btn" type="button">Add memory card</button>
-              </div>
-            </div>
-
-            <section class="album-page" aria-live="polite">
-              <div class="page-header-strip">
-                <span>Memory page</span>
-                <span id="memoryCount">0 cards</span>
-              </div>
-              <div id="memoryGrid" class="memory-grid"></div>
-            </section>
-          </section>
-        </section>
+      <main class="app-main">
+        <div id="viewRoot" class="view-root" aria-live="polite"></div>
       </main>
     </div>
 
     <dialog id="albumDialog" class="modal">
       <form method="dialog" id="albumForm" class="modal-card">
-        <h3>Create a new album</h3>
-        <p>Give this collection a title and a soft little subtitle.</p>
+        <h2>Create a new album</h2>
+        <p>Give this collection a title and a short note.</p>
         <label>
           Album title
           <input id="albumNameInput" name="albumName" type="text" maxlength="60" placeholder="Spring on the porch" required />
@@ -94,8 +48,8 @@
 
     <dialog id="memoryDialog" class="modal">
       <form method="dialog" id="memoryForm" class="modal-card">
-        <h3>Add a memory card</h3>
-        <p>Upload a photo, add a title, and keep a small note beside it.</p>
+        <h2>Add a memory card</h2>
+        <p>Upload a photo, add a title, and keep a short note beside it.</p>
         <label>
           Memory title
           <input id="memoryTitleInput" name="memoryTitle" type="text" maxlength="60" placeholder="Wildflower walk" required />

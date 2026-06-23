@@ -1,22 +1,18 @@
 const STORAGE_KEY = 'field-notes-album-v1';
 
 const els = {
-  albumTabs: document.getElementById('albumTabs'),
-  albumCount: document.getElementById('albumCount'),
-  albumTitle: document.getElementById('albumTitle'),
-  albumDescription: document.getElementById('albumDescription'),
-  memoryCount: document.getElementById('memoryCount'),
-  memoryGrid: document.getElementById('memoryGrid'),
-  newAlbumBtn: document.getElementById('newAlbumBtn'),
-  seedDemoBtn: document.getElementById('seedDemoBtn'),
-  renameAlbumBtn: document.getElementById('renameAlbumBtn'),
-  addMemoryBtn: document.getElementById('addMemoryBtn'),
+  navTitle: document.getElementById('navTitle'),
+  navCount: document.getElementById('navCount'),
+  createAlbumBtn: document.getElementById('createAlbumBtn'),
+  viewRoot: document.getElementById('viewRoot'),
   albumDialog: document.getElementById('albumDialog'),
   memoryDialog: document.getElementById('memoryDialog'),
   albumForm: document.getElementById('albumForm'),
   memoryForm: document.getElementById('memoryForm'),
   cancelAlbumBtn: document.getElementById('cancelAlbumBtn'),
   cancelMemoryBtn: document.getElementById('cancelMemoryBtn'),
+  backToAlbumsBtn: document.getElementById('backToAlbumsBtn'),
+  addMemoryBtn: document.getElementById('addMemoryBtn'),
   albumNameInput: document.getElementById('albumNameInput'),
   albumDescriptionInput: document.getElementById('albumDescriptionInput'),
   memoryTitleInput: document.getElementById('memoryTitleInput'),
@@ -28,6 +24,7 @@ const els = {
 const appState = {
   albums: [],
   activeAlbumId: null,
+  view: 'albums',
   mode: 'local'
 };
 
@@ -45,20 +42,25 @@ const formatDate = (value) => {
   }).format(date);
 };
 
-function loadLocalState() {
-  const fallback = {
-    albums: []
-  };
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
 
+function loadLocalState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return fallback;
+    if (!raw) return { albums: [] };
     const parsed = JSON.parse(raw);
     return {
       albums: Array.isArray(parsed.albums) ? parsed.albums : []
     };
   } catch {
-    return fallback;
+    return { albums: [] };
   }
 }
 
@@ -99,6 +101,14 @@ async function detectMode() {
   }
 }
 
+function getActiveAlbum() {
+  return appState.albums.find((album) => album.id === appState.activeAlbumId) || null;
+}
+
+function getAlbumCover(album) {
+  return album.memories?.[0]?.imageData || '';
+}
+
 async function hydrate() {
   const remote = await detectMode();
 
@@ -109,10 +119,14 @@ async function hydrate() {
     }));
   } else {
     const local = loadLocalState();
-    appState.albums = local.albums;
+    appState.albums = local.albums.map((album) => ({
+      ...album,
+      memories: Array.isArray(album.memories) ? album.memories : []
+    }));
   }
 
   appState.activeAlbumId = appState.albums[0]?.id || null;
+  appState.view = appState.activeAlbumId ? 'album' : 'albums';
   render();
 }
 
@@ -130,60 +144,82 @@ async function syncAlbums() {
     appState.activeAlbumId = appState.albums[0]?.id || null;
   }
 
+  if (!appState.activeAlbumId) {
+    appState.view = 'albums';
+  }
+
   render();
 }
 
-function getActiveAlbum() {
-  return appState.albums.find((album) => album.id === appState.activeAlbumId) || null;
+function openAlbum(albumId) {
+  appState.activeAlbumId = albumId;
+  appState.view = 'album';
+  render();
 }
 
-function renderAlbumTabs() {
-  els.albumTabs.innerHTML = '';
-  els.albumCount.textContent = `${appState.albums.length} album${appState.albums.length === 1 ? '' : 's'}`;
+function showAlbumList() {
+  appState.view = 'albums';
+  render();
+}
+
+function renderNav() {
+  els.navTitle.textContent = 'Albums';
+  els.navCount.textContent = `${appState.albums.length} album${appState.albums.length === 1 ? '' : 's'}`;
+}
+
+function renderAlbumCards() {
+  const grid = document.createElement('section');
+  grid.className = 'album-grid';
 
   if (!appState.albums.length) {
-    const empty = document.createElement('div');
-    empty.className = 'album-tab';
+    const empty = document.createElement('article');
+    empty.className = 'empty-state';
     empty.innerHTML = `
-      <div class="album-tab-title">No albums yet</div>
-      <div class="album-tab-caption">Create your first shelf of memories.</div>
-      <div class="album-tab-meta">Stored ${appState.mode === 'remote' ? 'in Neon' : 'in your browser'}</div>
+      <p class="section-kicker">Start here</p>
+      <h1>No albums yet</h1>
+      <p>Create your first album to begin adding memory cards.</p>
+      <button id="emptyCreateAlbumBtn" class="primary-btn" type="button">Create new album</button>
     `;
-    els.albumTabs.append(empty);
-    return;
+    grid.append(empty);
+    return grid;
   }
 
   appState.albums.forEach((album) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `album-tab ${album.id === appState.activeAlbumId ? 'active' : ''}`;
-    button.innerHTML = `
-      <span class="album-tab-title">${escapeHtml(album.title)}</span>
-      <span class="album-tab-caption">${escapeHtml(album.description || 'A little place for quiet moments.')}</span>
-      <span class="album-tab-meta">${album.memories.length} card${album.memories.length === 1 ? '' : 's'}</span>
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'album-card';
+    card.innerHTML = `
+      <div class="album-card-cover ${getAlbumCover(album) ? 'has-cover' : ''}">
+        ${getAlbumCover(album) ? `<img alt="" src="${escapeHtml(getAlbumCover(album))}" />` : '<span>Album</span>'}
+      </div>
+      <div class="album-card-copy">
+        <div class="album-card-top">
+          <h2>${escapeHtml(album.title)}</h2>
+          <span class="album-card-count">${album.memories.length} card${album.memories.length === 1 ? '' : 's'}</span>
+        </div>
+        <p>${escapeHtml(album.description || 'A quiet place for memories.')}</p>
+      </div>
     `;
-    button.addEventListener('click', () => {
-      appState.activeAlbumId = album.id;
-      render();
-    });
-    els.albumTabs.append(button);
+    card.addEventListener('click', () => openAlbum(album.id));
+    grid.append(card);
   });
+
+  return grid;
 }
 
 function renderMemoryGrid(album) {
-  els.memoryGrid.innerHTML = '';
+  const grid = document.createElement('section');
+  grid.className = 'memory-grid';
 
   if (!album || !album.memories.length) {
     const empty = document.createElement('article');
-    empty.className = 'memory-card empty-card';
+    empty.className = 'memory-empty';
     empty.innerHTML = `
-      <div>
-        <h3>Waiting for your next memory.</h3>
-        <p>Add a photo card to this page and it will stay tucked into your album.</p>
-      </div>
+      <h3>This album is empty</h3>
+      <p>Add a memory card to start filling it with photos and notes.</p>
     `;
-    els.memoryGrid.append(empty);
-    return;
+    grid.append(empty);
+    return grid;
   }
 
   album.memories.forEach((memory) => {
@@ -197,7 +233,7 @@ function renderMemoryGrid(album) {
 
     photo.src = memory.imageData;
     title.textContent = memory.title;
-    caption.textContent = memory.caption || 'A soft little note to remember the day.';
+    caption.textContent = memory.caption || 'A small note to remember this day.';
     stamp.textContent = formatDate(memory.createdAt);
 
     deleteButton.addEventListener('click', async () => {
@@ -206,31 +242,82 @@ function renderMemoryGrid(album) {
           method: 'DELETE'
         });
         await syncAlbums();
-      } else {
-        const activeAlbum = getActiveAlbum();
-        activeAlbum.memories = activeAlbum.memories.filter((item) => item.id !== memory.id);
-        saveLocalState();
-        render();
+        return;
       }
+
+      const activeAlbum = getActiveAlbum();
+      activeAlbum.memories = activeAlbum.memories.filter((item) => item.id !== memory.id);
+      saveLocalState();
+      render();
     });
 
     card.dataset.memoryId = memory.id;
-    els.memoryGrid.append(fragment);
+    grid.append(fragment);
   });
+
+  return grid;
+}
+
+function renderAlbumView(album) {
+  const container = document.createElement('section');
+  container.className = 'album-detail';
+  container.innerHTML = `
+    <div class="album-detail-header">
+      <div>
+        <p class="section-kicker">Album</p>
+        <h1>${escapeHtml(album.title)}</h1>
+        <p>${escapeHtml(album.description || 'A quiet place for memories.')}</p>
+      </div>
+      <div class="album-detail-actions">
+        <button id="backToAlbumsBtn" class="secondary-btn" type="button">Back to albums</button>
+        <button id="addMemoryBtn" class="primary-btn" type="button">Add memory card</button>
+      </div>
+    </div>
+    <div class="album-meta-row">
+      <span>${album.memories.length} card${album.memories.length === 1 ? '' : 's'}</span>
+      <span>Stored ${appState.mode === 'remote' ? 'in Neon' : 'locally in your browser'}</span>
+    </div>
+  `;
+
+  container.append(renderMemoryGrid(album));
+  return container;
 }
 
 function render() {
-  renderAlbumTabs();
+  renderNav();
 
-  const album = getActiveAlbum();
-  els.albumTitle.textContent = album?.title || 'Create your first album';
-  els.albumDescription.textContent = album?.description || 'Start with a new album, then attach photos to memory cards on the page.';
-  els.memoryCount.textContent = `${album?.memories.length || 0} card${album?.memories.length === 1 ? '' : 's'}`;
+  els.viewRoot.innerHTML = '';
 
-  els.renameAlbumBtn.disabled = !album;
-  els.addMemoryBtn.disabled = !album;
+  if (appState.view === 'album') {
+    const album = getActiveAlbum();
+    if (!album) {
+      appState.view = 'albums';
+      els.viewRoot.append(renderAlbumCards());
+      return;
+    }
 
-  renderMemoryGrid(album);
+    els.viewRoot.append(renderAlbumView(album));
+    bindViewButtons();
+    return;
+  }
+
+  els.viewRoot.append(renderAlbumCards());
+  bindViewButtons();
+}
+
+function bindViewButtons() {
+  document.getElementById('backToAlbumsBtn')?.addEventListener('click', showAlbumList);
+  document.getElementById('addMemoryBtn')?.addEventListener('click', () => {
+    if (!getActiveAlbum()) return;
+    els.memoryForm.reset();
+    els.memoryDialog.showModal();
+  });
+  document.getElementById('emptyCreateAlbumBtn')?.addEventListener('click', openCreateAlbumDialog);
+}
+
+function openCreateAlbumDialog() {
+  els.albumForm.reset();
+  els.albumDialog.showModal();
 }
 
 async function createAlbum({ title, description }) {
@@ -240,6 +327,7 @@ async function createAlbum({ title, description }) {
       body: JSON.stringify({ title, description })
     });
     appState.activeAlbumId = payload.album.id;
+    appState.view = 'album';
     await syncAlbums();
     return;
   }
@@ -254,30 +342,7 @@ async function createAlbum({ title, description }) {
 
   appState.albums.unshift(album);
   appState.activeAlbumId = album.id;
-  saveLocalState();
-  render();
-}
-
-async function renameAlbum() {
-  const album = getActiveAlbum();
-  if (!album) return;
-
-  const nextTitle = window.prompt('Album title', album.title)?.trim();
-  if (!nextTitle) return;
-
-  const nextDescription = window.prompt('Album description', album.description || '')?.trim() ?? album.description;
-
-  if (appState.mode === 'remote') {
-    await apiFetch(`/api/albums?id=${encodeURIComponent(album.id)}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ title: nextTitle, description: nextDescription })
-    });
-    await syncAlbums();
-    return;
-  }
-
-  album.title = nextTitle;
-  album.description = nextDescription;
+  appState.view = 'album';
   saveLocalState();
   render();
 }
@@ -312,15 +377,6 @@ async function createMemory({ title, caption, imageData }) {
   render();
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
 function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -353,33 +409,7 @@ async function compressImage(file) {
   return canvas.toDataURL('image/jpeg', 0.86);
 }
 
-function seedDemoAlbum() {
-  if (appState.albums.length) {
-    appState.activeAlbumId = appState.albums[0].id;
-    render();
-    return;
-  }
-
-  const demoAlbum = {
-    title: 'Garden Morning',
-    description: 'Linen sleeves, rosemary air, and soft light through the window.'
-  };
-
-  createAlbum(demoAlbum);
-}
-
-els.newAlbumBtn.addEventListener('click', () => {
-  els.albumForm.reset();
-  els.albumDialog.showModal();
-});
-
-els.seedDemoBtn.addEventListener('click', seedDemoAlbum);
-els.renameAlbumBtn.addEventListener('click', renameAlbum);
-els.addMemoryBtn.addEventListener('click', () => {
-  if (!getActiveAlbum()) return;
-  els.memoryForm.reset();
-  els.memoryDialog.showModal();
-});
+els.createAlbumBtn.addEventListener('click', openCreateAlbumDialog);
 els.cancelAlbumBtn.addEventListener('click', () => els.albumDialog.close());
 els.cancelMemoryBtn.addEventListener('click', () => els.memoryDialog.close());
 
@@ -387,6 +417,7 @@ els.albumForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const title = els.albumNameInput.value.trim();
   const description = els.albumDescriptionInput.value.trim();
+
   if (!title) return;
 
   try {
